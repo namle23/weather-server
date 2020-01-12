@@ -5,7 +5,7 @@ const axios = require('axios')
 const sqlite3 = require('sqlite3').verbose()
 
 const app = express()
-const port = process.env.PORT || 5000
+const port = process.env.PORT || 8080
 const server = http.createServer(app)
 const publicPath = path.join(__dirname, '../build')
 
