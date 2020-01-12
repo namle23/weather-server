@@ -71,7 +71,7 @@ setInterval(() => {
       res.send(weather.data)
     })
   })
-}, 3600000)
+}, 5000)
 
 pool.query('SELECT * FROM weather ORDER BY id DESC LIMIT 10', (error, rows) => {
   if (error) console.error('Fail fetching data ' + error.message)
@@ -132,7 +132,7 @@ setInterval(() => {
       console.error('Catched ' + error.message)
     }
   })
-}, 3600000)
+}, 5000)
 
 app.get('/', (req, res) => {
   res.send('Hallå')
