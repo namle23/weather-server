@@ -45,32 +45,6 @@ getWeather().then(weather => {
   app.get('/current', (req, res) => {
     res.send(weather.data)
   })
-
-  // try {
-  //   db.exec(
-  //     "INSERT INTO weather (location, timestamp, temp, feels_like, wind_speed, humidity, conditions) VALUES ('" +
-  //       weather.data.name +
-  //       "','" +
-  //       weather.data.dt +
-  //       "','" +
-  //       weather.data.main.temp +
-  //       "','" +
-  //       weather.data.main.feels_like +
-  //       "','" +
-  //       weather.data.wind.speed +
-  //       "','" +
-  //       weather.data.main.humidity +
-  //       "','" +
-  //       weather.data.weather[0].main +
-  //       "')",
-  //     error => {
-  //       if (error) return console.error('Insert error ' + error.message)
-  //       console.log('Inserted successfully!')
-  //     }
-  //   )
-  // } catch (error) {
-  //   console.error('Catched ' + error.message)
-  // }
 })
 
 setInterval(() => {
