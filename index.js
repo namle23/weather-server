@@ -150,4 +150,8 @@ setInterval(() => {
   })
 }, 3600000)
 
+app.get('/', (req, res) => {
+  res.send('Hallå')
+})
+
 server.listen(port, () => console.log('Listening on ' + port))
