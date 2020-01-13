@@ -87,7 +87,7 @@ setInterval(() => {
       console.error('Catched ' + error.message)
     }
   })
-}, 3600000)
+}, 800000)
 
 db.all('SELECT * FROM weather ORDER BY id DESC LIMIT 10', (error, rows) => {
   if (error) console.error('Fail fetching data ' + error.message)
@@ -142,13 +142,15 @@ setInterval(() => {
           app.get('/history', (req, res) => {
             res.send(rows)
           })
+
+          console.log(rows)
         }
       )
     } catch (error) {
       console.error('Catched ' + error.message)
     }
   })
-}, 3600000)
+}, 800000)
 
 app.get('/', (req, res) => {
   res.send('Hallå')
