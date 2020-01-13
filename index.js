@@ -142,8 +142,6 @@ setInterval(() => {
           app.get('/history', (req, res) => {
             res.send(rows)
           })
-
-          console.log(rows)
         }
       )
     } catch (error) {
