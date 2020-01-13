@@ -47,15 +47,7 @@ getWeather().then(weather => {
   })
 })
 
-setInterval(() => {
-  let getWeather = async () => {
-    try {
-      return await axios.get(url)
-    } catch (error) {
-      console.error(error)
-    }
-  }
-
+let historyUpdate = () => {
   getWeather().then(weather => {
     app.get('/current', (req, res) => {
       res.send(weather.data)
@@ -86,72 +78,23 @@ setInterval(() => {
     } catch (error) {
       console.error('Catched ' + error.message)
     }
-  })
-}, 800000)
 
-db.all('SELECT * FROM weather ORDER BY id DESC LIMIT 10', (error, rows) => {
-  if (error) console.error('Fail fetching data ' + error.message)
+    db.all('SELECT * FROM weather ORDER BY id DESC LIMIT 10', (error, rows) => {
+      if (error) console.error('Fail fetching data ' + error.message)
 
-  app.get('/history', (req, res) => {
-    res.send(rows)
-  })
-})
-
-setInterval(() => {
-  let getWeatherRepeat = async () => {
-    try {
-      return await axios.get(url)
-    } catch (error) {
-      console.error(error)
-    }
-  }
-
-  getWeatherRepeat().then(weather => {
-    app.get('/current', (req, res) => {
-      res.send(weather.data)
+      app.get('/history', (req, res) => {
+        res.send(rows)
+      })
     })
-
-    try {
-      db.exec(
-        "INSERT INTO weather (location, timestamp, temp, feels_like, wind_speed, humidity, conditions) VALUES ('" +
-          weather.data.name +
-          "','" +
-          weather.data.dt +
-          "','" +
-          weather.data.main.temp +
-          "','" +
-          weather.data.main.feels_like +
-          "','" +
-          weather.data.wind.speed +
-          "','" +
-          weather.data.main.humidity +
-          "','" +
-          weather.data.weather[0].main +
-          "')",
-        error => {
-          if (error) return console.error('Insert error ' + error.message)
-          console.log('Inserted successfully!')
-        }
-      )
-
-      db.all(
-        'SELECT * FROM weather ORDER BY id DESC LIMIT 10',
-        (error, rows) => {
-          if (error) console.error('Fail fetching data ' + error.message)
-
-          app.get('/history', (req, res) => {
-            res.send(rows)
-          })
-        }
-      )
-    } catch (error) {
-      console.error('Catched ' + error.message)
-    }
   })
-}, 800000)
+
+  setTimeout(historyUpdate, 800000)
+}
+
+historyUpdate()
 
 app.get('/', (req, res) => {
-  res.send('Hallå')
+  res.send('Hallo')
 })
 
 server.listen(port, () => console.log('Listening on ' + port))
