@@ -30,8 +30,10 @@ db.run(
 
 io.on('connection', socket => {
   console.log('New client connected')
+  getApiAndEmit(socket)
   setInterval(() => getApiAndEmit(socket), 10000)
-  setInterval(() => getHistory(socket), 10000)
+  getHistory(socket)
+  setInterval(() => getHistory(socket), 800000)
   socket.on('disconnect', () => console.log('Client disconnected'))
 })
 
