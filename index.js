@@ -3,26 +3,21 @@ const http = require('http')
 const path = require('path')
 const axios = require('axios')
 const sqlite3 = require('sqlite3').verbose()
+const cors = require('cors')
+const socketIo = require('socket.io')
 
 const app = express()
 const port = process.env.PORT || 8080
 const server = http.createServer(app)
 const publicPath = path.join(__dirname, '../build')
+const io = socketIo(server)
 
 let apiKey = '088dec20a78c3def05a47bdab72ca399' //TODO hide API key
 let city = 'Vaasa'
 let url = `http://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`
 
+app.use(cors())
 app.use(express.static(publicPath))
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*')
-  res.header(
-    'Access-Control-Allow-Headers',
-    'Origin, X-Requested-With, Content-Type, Accept'
-  )
-  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE')
-  next()
-})
 
 let db = new sqlite3.Database('./db/data.db', error => {
   if (error) return console.error('Connect error ' + error.message)
@@ -33,42 +28,47 @@ db.run(
   'CREATE TABLE IF NOT EXISTS weather (id INTEGER PRIMARY KEY AUTOINCREMENT, location, timestamp, temp, feels_like, wind_speed, humidity, conditions)'
 )
 
-let getWeather = async () => {
+io.on('connection', socket => {
+  console.log('New client connected')
+  setInterval(() => getApiAndEmit(socket), 10000)
+  setInterval(() => getHistory(socket), 10000)
+  socket.on('disconnect', () => console.log('Client disconnected'))
+})
+
+const getApiAndEmit = async socket => {
   try {
-    return await axios.get(url)
+    const res = await axios.get(url)
+    socket.emit('FromAPI', res.data)
   } catch (error) {
-    console.error(error)
+    console.error(`Error: ${error.code}`)
   }
 }
 
-getWeather().then(weather => {
-  app.get('/current', (req, res) => {
-    res.send(weather.data)
-  })
-})
-
-let historyUpdate = () => {
-  getWeather().then(weather => {
-    app.get('/current', (req, res) => {
-      res.send(weather.data)
+const getHistory = async socket => {
+  try {
+    db.all('SELECT * FROM weather ORDER BY id DESC LIMIT 10', (error, rows) => {
+      if (error) console.error('Fail fetching data ' + error.message)
+      socket.emit('FromHistoryAPI', rows)
     })
+
+    const res = await axios.get(url)
 
     try {
       db.exec(
         "INSERT INTO weather (location, timestamp, temp, feels_like, wind_speed, humidity, conditions) VALUES ('" +
-          weather.data.name +
+          res.data.name +
           "','" +
-          weather.data.dt +
+          res.data.dt +
           "','" +
-          weather.data.main.temp +
+          res.data.main.temp +
           "','" +
-          weather.data.main.feels_like +
+          res.data.main.feels_like +
           "','" +
-          weather.data.wind.speed +
+          res.data.wind.speed +
           "','" +
-          weather.data.main.humidity +
+          res.data.main.humidity +
           "','" +
-          weather.data.weather[0].main +
+          res.data.weather[0].main +
           "')",
         error => {
           if (error) return console.error('Insert error ' + error.message)
@@ -78,20 +78,10 @@ let historyUpdate = () => {
     } catch (error) {
       console.error('Catched ' + error.message)
     }
-
-    db.all('SELECT * FROM weather ORDER BY id DESC LIMIT 10', (error, rows) => {
-      if (error) console.error('Fail fetching data ' + error.message)
-
-      app.get('/history', (req, res) => {
-        res.send(rows)
-      })
-    })
-  })
-
-  setTimeout(historyUpdate, 800000)
+  } catch (error) {
+    console.error(`Error: ${error.code}`)
+  }
 }
-
-historyUpdate()
 
 app.get('/', (req, res) => {
   res.send('Hallo')
