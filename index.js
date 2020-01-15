@@ -36,8 +36,8 @@ pool.query(
 io.on('connection', socket => {
   console.log('New client connected')
   getApiAndEmit(socket)
-  setInterval(() => getApiAndEmit(socket), 10000)
-  getHistory(socket)
+  setInterval(() => getApiAndEmit(socket), 300000)
+  getInitialHistory(socket)
   setInterval(() => getHistory(socket), 800000)
   socket.on('disconnect', () => console.log('Client disconnected'))
 })
@@ -46,6 +46,20 @@ const getApiAndEmit = async socket => {
   try {
     const res = await axios.get(url)
     socket.emit('FromAPI', res.data)
+  } catch (error) {
+    console.error(`Error: ${error.code}`)
+  }
+}
+
+const getInitialHistory = async socket => {
+  try {
+    pool.query(
+      'SELECT * FROM weather ORDER BY id DESC LIMIT 10',
+      (error, rows) => {
+        if (error) console.error('Fail fetching data ' + error.message)
+        socket.emit('FromHistoryAPI', rows.rows)
+      }
+    )
   } catch (error) {
     console.error(`Error: ${error.code}`)
   }
