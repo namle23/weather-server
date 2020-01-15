@@ -2,9 +2,10 @@ const express = require('express')
 const http = require('http')
 const path = require('path')
 const axios = require('axios')
-const sqlite3 = require('sqlite3').verbose()
+// const sqlite3 = require('sqlite3').verbose()
 const cors = require('cors')
 const socketIo = require('socket.io')
+const { pool } = require('./config')
 
 const app = express()
 const port = process.env.PORT || 8080
@@ -19,13 +20,17 @@ let url = `http://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiK
 app.use(cors())
 app.use(express.static(publicPath))
 
-let db = new sqlite3.Database('./db/data.db', error => {
-  if (error) return console.error('Connect error ' + error.message)
-  console.log('Connected to database!')
-})
+// let db = new sqlite3.Database('./db/data.db', error => {
+//   if (error) return console.error('Connect error ' + error.message)
+//   console.log('Connected to database!')
+// })
 
-db.run(
-  'CREATE TABLE IF NOT EXISTS weather (id INTEGER PRIMARY KEY AUTOINCREMENT, location, timestamp, temp, feels_like, wind_speed, humidity, conditions)'
+// db.run(
+//   'CREATE TABLE IF NOT EXISTS weather (id INTEGER PRIMARY KEY AUTOINCREMENT, location, timestamp, temp, feels_like, wind_speed, humidity, conditions)'
+// )
+
+pool.query(
+  ' CREATE TABLE IF NOT EXISTS weather (id SERIAL PRIMARY KEY, location VARCHAR(255), timestamp VARCHAR(255), temp VARCHAR(255), feels_like VARCHAR(255), wind_speed VARCHAR(255), humidity VARCHAR(255), conditions VARCHAR(255))'
 )
 
 io.on('connection', socket => {
@@ -48,16 +53,19 @@ const getApiAndEmit = async socket => {
 
 const getHistory = async socket => {
   try {
-    db.all('SELECT * FROM weather ORDER BY id DESC LIMIT 10', (error, rows) => {
-      if (error) console.error('Fail fetching data ' + error.message)
-      socket.emit('FromHistoryAPI', rows)
-    })
+    pool.query(
+      'SELECT * FROM weather ORDER BY id DESC LIMIT 10',
+      (error, rows) => {
+        if (error) console.error('Fail fetching data ' + error.message)
+        socket.emit('FromHistoryAPI', rows.rows)
+      }
+    )
 
     const res = await axios.get(url)
 
     try {
-      db.exec(
-        "INSERT INTO weather (location, timestamp, temp, feels_like, wind_speed, humidity, conditions) VALUES ('" +
+      pool.query(
+        "INSERT INTO weather (locatio, timestam, temp, feels_like, wind_speed, humidity, conditions) VALUES ('" +
           res.data.name +
           "','" +
           res.data.dt +

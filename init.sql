@@ -1,8 +1,8 @@
-CREATE TABLE weather
+  CREATE TABLE IF NOT EXISTS weather
 (
     id SERIAL PRIMARY KEY,
-    location VARCHAR(255),
-    timestamp VARCHAR(255),
+    locatio VARCHAR(255),
+    timestam VARCHAR(255),
     temp VARCHAR(255),
     feels_like VARCHAR(255),
     wind_speed VARCHAR(255),
