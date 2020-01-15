@@ -38,7 +38,7 @@ io.on('connection', socket => {
   getApiAndEmit(socket)
   setInterval(() => getApiAndEmit(socket), 300000)
   getInitialHistory(socket)
-  setInterval(() => getHistory(socket), 3600000)
+  setInterval(() => getHistory(socket), 900000)
   socket.on('disconnect', () => console.log('Client disconnected'))
 })
 
